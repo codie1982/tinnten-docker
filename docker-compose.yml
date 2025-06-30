@@ -1,0 +1,139 @@
+#version: '3.8'  # Compose dosya versiyonu
+
+services:  # Burada tüm servislerimizi tanımlarız
+
+  redis:
+    image: redis:6
+    restart: always
+    volumes:
+      - redis_data:/data                # Verileri bu named volume’a kaydet
+      - ./redis.conf:/usr/local/etc/redis/redis.conf  # Opsiyonel: kendi conf dosyanız
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=tinntenRedis123  # Konfig dosyasıyla eşleşmeli
+    networks:
+      - tinnten-net   # 👈 BUNU EKLEMELİYİZ
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"       # AMQP
+      - "15672:15672"     # Yönetim arayüzü
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=password
+    networks:
+      - tinnten-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    command: start --hostname keycloak.tinnten.com --proxy edge --hostname-strict=false
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:8080"
+    networks:
+      - tinnten-net
+  tinnten-server:
+    build:
+      context: ./tinnten-server
+    ports:
+      - "5001:5001"       # API portu
+    restart: always   # 👈 bu satırı ekle
+    depends_on:
+      - redis
+      - rabbitmq
+      - keycloak
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
+    networks:
+      - tinnten-net
+
+  conversation-worker:
+    build:
+      context: ./tinnten-server
+    command: ["npm", "run", "conversationworker"]
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    depends_on:
+      - rabbitmq
+      - redis
+    networks:
+      - tinnten-net
+
+  email-worker:
+    build:
+      context: ./tinnten-server
+    command: ["npm", "run", "emailworker"]
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    depends_on:
+      - rabbitmq
+    networks:
+      - tinnten-net
+  agent-worker:
+    build:
+      context: ./tinnten-server
+    command: ["npm", "run", "agentworker"]
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    depends_on:
+      - rabbitmq
+    networks:
+      - tinnten-net
+  db-worker:
+    build:
+      context: ./tinnten-server
+    command: ["npm", "run", "dbworker"]
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    depends_on:
+      - rabbitmq
+    networks:
+      - tinnten-net
+  tinnten-embedding:
+    build:
+      context: ./tinnten-embedding
+    ports:
+      - "5003:5003"       # Embedding API portu
+    networks:
+      - tinnten-net
+
+volumes:
+  keycloak_data:
+  redis_data:
+
+networks:
+  tinnten-net:
+    driver: bridge
