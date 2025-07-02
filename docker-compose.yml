@@ -30,7 +30,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     image: quay.io/keycloak/keycloak:24.0.1
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: start --hostname api-test-auth.tinnten.com --proxy edge --hostname-strict=false
+    command: start --hostname api-auth.tinnten.com --proxy edge --hostname-strict=false
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -49,7 +49,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       - rabbitmq
       - keycloak
     environment:
-      - NODE_ENV=preProduction
+      - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
@@ -61,7 +61,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       context: ./tinnten-server
     command: ["npm", "run", "conversationworker"]
     environment:
-      - NODE_ENV=preProduction
+      - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=admin
@@ -79,7 +79,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       context: ./tinnten-server
     command: ["npm", "run", "emailworker"]
     environment:
-      - NODE_ENV=preProduction
+      - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=admin
@@ -95,7 +95,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       context: ./tinnten-server
     command: ["npm", "run", "agentworker"]
     environment:
-      - NODE_ENV=preProduction
+      - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=admin
@@ -111,7 +111,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       context: ./tinnten-server
     command: ["npm", "run", "dbworker"]
     environment:
-      - NODE_ENV=preProduction
+      - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=admin
