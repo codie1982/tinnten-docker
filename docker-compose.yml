@@ -122,13 +122,6 @@ services:  # Burada tüm servislerimizi tanımlarız
       - rabbitmq
     networks:
       - tinnten-net
-  tinnten-embedding:
-    build:
-      context: ./tinnten-embedding
-    ports:
-      - "5003:5003"       # Embedding API portu
-    networks:
-      - tinnten-net
 
 volumes:
   keycloak_data:
