@@ -25,12 +25,16 @@ services:  # Burada tüm servislerimizi tanımlarız
       - RABBITMQ_DEFAULT_PASS=password
     networks:
       - tinnten-net
-
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: start --hostname api-auth.tinnten.com --proxy edge --hostname-strict=false
+    command:
+      - start
+      - --hostname=api-test-auth.tinnten.com
+      - --proxy=edge
+      - --hostname-strict=false
+      - --http-relative-path=/
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
