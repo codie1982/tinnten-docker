@@ -29,12 +29,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     image: quay.io/keycloak/keycloak:24.0.1
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command:
-    - start
-    - --hostname=api-test-auth.tinnten.com
-    - --proxy-headers=xforwarded
-    - --hostname-strict=false
-    - --http-relative-path=/
+    command: start --hostname api-test-auth.tinnten.com/ --proxy edge --hostname-strict=false
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
