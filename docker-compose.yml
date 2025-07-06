@@ -32,8 +32,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     command:
     - start
     - --hostname=api-test-auth.tinnten.com
-    - --proxy=edge
-    - --proxy-https-port=443
+    - --proxy-headers=xforwarded
     - --hostname-strict=false
     - --http-relative-path=/
     environment:
