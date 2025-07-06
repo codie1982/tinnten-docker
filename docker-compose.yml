@@ -32,9 +32,10 @@ services:  # Burada tüm servislerimizi tanımlarız
     command:
     - start
     - --hostname=api-test-auth.tinnten.com
+    - --proxy=edge
+    - --proxy-https-port=443
     - --hostname-strict=false
     - --http-relative-path=/
-    - --http-enabled=true
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
