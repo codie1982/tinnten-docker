@@ -30,11 +30,11 @@ services:  # Burada tüm servislerimizi tanımlarız
     volumes:
       - keycloak_data:/opt/keycloak/data
     command:
-      - start
-      - --hostname=keycloak
-      - --proxy=edge
-      - --hostname-strict=false
-      - --http-relative-path=/
+    - start
+    - --hostname=keycloak
+    - --hostname-strict=false
+    - --http-relative-path=/
+    - --http-enabled=true
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
