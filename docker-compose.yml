@@ -31,7 +31,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       - keycloak_data:/opt/keycloak/data
     command:
       - start
-      - --hostname=api-test-auth.tinnten.com
+      - --hostname=keycloak
       - --proxy=edge
       - --hostname-strict=false
       - --http-relative-path=/
