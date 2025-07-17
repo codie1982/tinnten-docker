@@ -30,7 +30,25 @@ services:
     cpus: 0.5                 # 💡 Aşırı CPU kullanmasını önler
     networks:
       - tinnten-net
-
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false     # 🚫 Auth dev'de kapalı
+      - xpack.security.http.ssl.enabled=false
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m   # 💡 RAM limiti (dilersen artırabilirsin)
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"   # 🔓 Local erişim için
+    networks:
+      - tinnten-net
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -151,11 +169,31 @@ services:
       - mongodb
     networks:
       - tinnten-net
-
+  search-worker:
+    build:
+      context: ./tinnten-server
+    command: ["npm", "run", "searchworker"]
+    environment:
+      - NODE_ENV=preProduction
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - elasticsearch  # 👈 ES servis beklenmeli
+    networks:
+      - tinnten-net
 volumes:
   keycloak_data:
   redis_data:
   mongo_data:   # 👈 MongoDB volume'u ekledik
+  esdata:       # 👈 Elasticsearch verileri için volume
 
 networks:
   tinnten-net:
