@@ -1,30 +1,47 @@
-#version: '3.8'  # Compose dosya versiyonu
+version: '3.8'
 
-services:  # Burada tüm servislerimizi tanımlarız
-
+services:
   redis:
     image: redis:6
     restart: always
     volumes:
-      - redis_data:/data                # Verileri bu named volume’a kaydet
-      - ./redis.conf:/usr/local/etc/redis/redis.conf  # Opsiyonel: kendi conf dosyanız
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
       - "6379:6379"
     environment:
-      - REDIS_PASSWORD=tinntenRedis123  # Konfig dosyasıyla eşleşmeli
+      - REDIS_PASSWORD=tinntenRedis123
     networks:
-      - tinnten-net   # 👈 BUNU EKLEMELİYİZ
+      - tinnten-net
+
+  mongodb:
+    image: mongo:6
+    container_name: tinnten-mongodb
+    restart: always
+    ports:
+      - "27017:27017"  # 🔓 Dış dünyaya açılır, sadece lokal geliştirmede uygundur
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: tinntenMongo123
+    mem_limit: 512m           # 💡 Dev için yeterli bellek limiti
+    cpus: 0.5                 # 💡 Aşırı CPU kullanmasını önler
+    networks:
+      - tinnten-net
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - "5672:5672"       # AMQP
-      - "15672:15672"     # Yönetim arayüzü
+      - "5672:5672"
+      - "15672:15672"
     environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=password
     networks:
       - tinnten-net
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
     volumes:
@@ -37,21 +54,24 @@ services:  # Burada tüm servislerimizi tanımlarız
       - "3000:8080"
     networks:
       - tinnten-net
+
   tinnten-server:
     build:
       context: ./tinnten-server
     ports:
-      - "5001:5001"       # API portu
-    restart: always   # 👈 bu satırı ekle
+      - "5001:5001"
+    restart: always
     depends_on:
       - redis
       - rabbitmq
       - keycloak
+      - mongodb   # 👈 MongoDB'yi ekledik
     environment:
       - NODE_ENV=preProduction
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     networks:
       - tinnten-net
 
@@ -67,9 +87,11 @@ services:  # Burada tüm servislerimizi tanımlarız
       - RABBITMQ_PASSWORD=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     depends_on:
       - rabbitmq
       - redis
+      - mongodb
     networks:
       - tinnten-net
 
@@ -85,10 +107,13 @@ services:  # Burada tüm servislerimizi tanımlarız
       - RABBITMQ_PASSWORD=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     depends_on:
       - rabbitmq
+      - mongodb
     networks:
       - tinnten-net
+
   agent-worker:
     build:
       context: ./tinnten-server
@@ -101,10 +126,13 @@ services:  # Burada tüm servislerimizi tanımlarız
       - RABBITMQ_PASSWORD=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     depends_on:
       - rabbitmq
+      - mongodb
     networks:
       - tinnten-net
+
   db-worker:
     build:
       context: ./tinnten-server
@@ -117,14 +145,17 @@ services:  # Burada tüm servislerimizi tanımlarız
       - RABBITMQ_PASSWORD=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     depends_on:
       - rabbitmq
+      - mongodb
     networks:
       - tinnten-net
 
 volumes:
   keycloak_data:
   redis_data:
+  mongo_data:   # 👈 MongoDB volume'u ekledik
 
 networks:
   tinnten-net:
