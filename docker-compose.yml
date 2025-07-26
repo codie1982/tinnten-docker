@@ -71,29 +71,27 @@ services:  # Burada tüm servislerimizi tanımlarız
     volumes:
       - keycloak_data:/opt/keycloak/data
     command: >
-      start 
-      --hostname=keycloak 
-      --proxy-headers=edge 
-      --hostname-strict=false 
-      --http-enabled=true 
+      start
+      --optimized
+      --http-enabled=true
       --http-port=8080
-      --optimized 
-      --hostname-path=/auth
+      --hostname-strict=false
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_HTTP_RELATIVE_PATH=/auth  # YENİ FORMAT - ENVIRONMENT VARIABLE OLARAK
-      - KC_PROXY=edge
-      - KC_HOSTNAME_STRICT=false
+      - KC_PROXY_HEADERS=xforwarded  # Düzeltildi: edge yerine xforwarded veya forwarded
       - KC_HOSTNAME=keycloak
-      - KC_HTTP_ENABLED=true
+      - KC_HTTP_RELATIVE_PATH=/auth
+      - KC_HOSTNAME_PATH=/auth
+      - KC_HOSTNAME_STRICT=false
+      - QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY=true
     ports:
-      - "3000:8080"  # Sadece internal ağlar için 3000 yerine 8080 kullanabilirsiniz
+      - "3000:8080"
     networks:
       - tinnten-net
     mem_limit: 2048m
     cpus: 1.0
-    restart: unless-stopped  # Otomatik restart eklenmesi önerilir
+    restart: unless-stopped
 
   tinnten-server:
     build:
