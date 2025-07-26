@@ -77,7 +77,8 @@ services:  # Burada tüm servislerimizi tanımlarız
       --hostname-strict=false 
       --http-enabled=true 
       --http-port=8080
-      --http-relative-path=/auth  # Eski sürümlerle uyumluluk için
+      --optimized 
+      --hostname-path=/auth
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
