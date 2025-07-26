@@ -55,6 +55,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       - tinnten-net   # 👈 BUNU EKLEMELİYİZ
   rabbitmq:
     image: rabbitmq:3-management
+    restart: always
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -66,14 +67,20 @@ services:  # Burada tüm servislerimizi tanımlarız
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
+    container_name: tinnten-keycloak-1
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: start --hostname keycloak --proxy edge --hostname-strict=false
+    command: >
+      start --hostname keycloak --proxy=edge --hostname-strict=false --http-enabled=true --http-port=8080
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:8080"
     networks:
       - tinnten-net
+    mem_limit: 2048m     # 2 GB RAM
+    cpus: 1.0            # 1 vCPU
 
   tinnten-server:
     build:
@@ -100,6 +107,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     build:
       context: ./tinnten-server
     command: ["npm", "run", "emailworker"]
+    restart: always
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -120,6 +128,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     build:
       context: ./tinnten-server
     command: ["npm", "run", "dbworker"]
+    restart: always
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -140,6 +149,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     build:
       context: ./tinnten-server
     command: ["sh", "-c", "./wait-for-it.sh elasticsearch:9200 -- npm run searchworker"]
+    restart: always
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -161,6 +171,7 @@ services:  # Burada tüm servislerimizi tanımlarız
   tinnten-embedding:
     build:
       context: ./tinnten-embedding
+    restart: always  
     ports:
       - "5003:5003"       # Embedding API portu
     environment:
