@@ -71,16 +71,26 @@ services:  # Burada tüm servislerimizi tanımlarız
     volumes:
       - keycloak_data:/opt/keycloak/data
     command: >
-      start --proxy edge --hostname-strict=false
+      start 
+      --hostname=keycloak 
+      --proxy=edge 
+      --hostname-strict=false 
+      --http-enabled=true 
+      --http-port=8080
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_PROXY=edge
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME=keycloak
+      - KC_HTTP_ENABLED=true
     ports:
-      - "3000:8080"
+      - "3000:8080"  # Sadece internal ağlar için 3000 yerine 8080 kullanabilirsiniz
     networks:
       - tinnten-net
-    mem_limit: 2048m     # 2 GB RAM
-    cpus: 1.0            # 1 vCPU
+    mem_limit: 2048m
+    cpus: 1.0
+    restart: unless-stopped  # Otomatik restart eklenmesi önerilir
 
   tinnten-server:
     build:
