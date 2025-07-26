@@ -82,6 +82,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HTTP_RELATIVE_PATH=/auth  # YENİ FORMAT - ENVIRONMENT VARIABLE OLARAK
       - KC_PROXY=edge
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME=keycloak
