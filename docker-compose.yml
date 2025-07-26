@@ -79,11 +79,11 @@ services:  # Burada tüm servislerimizi tanımlarız
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_PROXY_HEADERS=xforwarded  # Düzeltildi: edge yerine xforwarded veya forwarded
-      - KC_HOSTNAME=keycloak
+      - KC_PROXY_HEADERS=xforwarded
       - KC_HTTP_RELATIVE_PATH=/auth
       - KC_HOSTNAME_PATH=/auth
       - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_URL=http://localhost:38080/auth
       - QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY=true
     ports:
       - "3000:8080"
