@@ -73,10 +73,11 @@ services:  # Burada tüm servislerimizi tanımlarız
     command: >
       start 
       --hostname=keycloak 
-      --proxy=edge 
+      --proxy-headers=edge 
       --hostname-strict=false 
       --http-enabled=true 
       --http-port=8080
+      --http-relative-path=/auth  # Eski sürümlerle uyumluluk için
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
