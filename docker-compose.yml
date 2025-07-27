@@ -105,6 +105,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
+      - ELASTICSEARCH_BASE_URL=http://elasticsearch:9200
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     networks:
       - tinnten-net
