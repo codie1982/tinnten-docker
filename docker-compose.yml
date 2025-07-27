@@ -70,11 +70,7 @@ services:  # Burada tüm servislerimizi tanımlarız
     container_name: tinnten-keycloak-1
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: >
-      start
-      --http-enabled=true
-      --http-port=8080
-      --proxy=edge
+    command: start --hostname api-auth.tinnten.com --proxy edge --hostname-strict=false
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
