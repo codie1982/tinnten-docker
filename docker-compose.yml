@@ -79,10 +79,14 @@ services:  # Burada tüm servislerimizi tanımlarız
       --hostname-strict=true
       --hostname-strict-backchannel=false
       --hostname-strict-https=false
-      --http-relative-path=/auth
       --proxy=edge
     environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HOSTNAME=api-auth.tinnten.com
+      - KC_PROXY=edge
       - KC_PROXY_HEADERS=xforwarded
+      - KC_HTTP_RELATIVE_PATH=/ # Default root path
     ports:
       - "8080:8080"  # UI erişimi (gerekirse Nginx'e yönlendirilir)
     networks:
