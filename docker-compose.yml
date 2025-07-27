@@ -83,7 +83,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       - KC_HTTP_RELATIVE_PATH=/auth
       - KC_HOSTNAME_PATH=/auth
       - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME_URL=http://localhost:38080/auth
+      - KC_HOSTNAME_URL=http://keycloak:8080/auth
       - QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY=true
     ports:
       - "3000:8080"
