@@ -75,9 +75,11 @@ services:  # Burada tüm servislerimizi tanımlarız
       --http-enabled=true
       --http-port=8080 
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HTTP_RELATIVE_PATH=/auth
+      - KC_HOSTNAME=api-auth.tinnten.com
+      - KC_HOSTNAME_URL=https://api-auth.tinnten.com/auth
       - KC_PROXY_HEADERS=xforwarded
+      - KC_HOSTNAME_STRICT=false
     ports:
       - "8080:8080"  # Keycloak UI için
     networks:
