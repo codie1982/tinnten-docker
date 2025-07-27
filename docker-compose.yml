@@ -70,14 +70,14 @@ services:  # Burada tüm servislerimizi tanımlarız
     container_name: tinnten-keycloak-1
     volumes:
       - keycloak_data:/opt/keycloak/data
-    command: start --hostname api-auth.tinnten.com --proxy edge --hostname-strict=false
+    command: >
+      start
+      --http-enabled=true
+      --http-port=8080 
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_HOSTNAME=api-auth.tinnten.com
-      - KC_HOSTNAME_STRICT=true
       - KC_PROXY_HEADERS=xforwarded
-      - KC_PROXY=edge
     ports:
       - "8080:8080"  # Keycloak UI için
     networks:
