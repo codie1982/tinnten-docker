@@ -78,6 +78,9 @@ services:  # Burada tüm servislerimizi tanımlarız
       - KC_HOSTNAME_STRICT=true
       - KC_PROXY_HEADERS=xforwarded
       - KC_PROXY=edge
+    ports:
+      - "8080:8080"  # Keycloak UI için
+      - "8443:8443"  # Keycloak Admin Console için
     networks:
       - tinnten-net
     mem_limit: 2048m
