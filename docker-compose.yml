@@ -78,7 +78,6 @@ services:  # Burada tüm servislerimizi tanımlarız
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_HTTP_RELATIVE_PATH=/auth
       - KC_HOSTNAME=api-auth.tinnten.com
       - KC_HOSTNAME_STRICT=true
       - KC_PROXY_HEADERS=xforwarded
