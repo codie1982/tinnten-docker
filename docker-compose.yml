@@ -75,7 +75,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       --optimized
       --http-enabled=true
       --http-port=8080
-      --hostname=localhost
+      --hostname=api-auth.tinnten.com
       --hostname-strict=false
       --hostname-strict-https=false
     environment:
