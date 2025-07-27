@@ -79,7 +79,7 @@ services:  # Burada tüm servislerimizi tanımlarız
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_HTTP_RELATIVE_PATH=/auth
-      - KC_HOSTNAME=auth.tinnten.com
+      - KC_HOSTNAME=api-auth.tinnten.com
       - KC_HOSTNAME_STRICT=true
       - KC_PROXY_HEADERS=xforwarded
       - KC_PROXY=edge
