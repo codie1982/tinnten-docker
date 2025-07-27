@@ -76,13 +76,15 @@ services:  # Burada tüm servislerimizi tanımlarız
       --http-enabled=true
       --http-port=8080
       --hostname=api-auth.tinnten.com
-      --hostname-strict=false
+      --hostname-strict=true
+      --hostname-strict-backchannel=false
       --hostname-strict-https=false
+      --http-relative-path=/auth
+      --proxy=edge
     environment:
-      - KC_HTTP_RELATIVE_PATH=/
       - KC_PROXY_HEADERS=xforwarded
     ports:
-      - "8080:8080"  # Keycloak UI için
+      - "8080:8080"  # UI erişimi (gerekirse Nginx'e yönlendirilir)
     networks:
       - tinnten-net
     mem_limit: 2048m
