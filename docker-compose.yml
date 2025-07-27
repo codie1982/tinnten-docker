@@ -75,13 +75,12 @@ services:  # Burada tüm servislerimizi tanımlarız
       --optimized
       --http-enabled=true
       --http-port=8080
+      --hostname=api-auth.tinnten.com
       --hostname-strict=false
+      --hostname-strict-https=false
     environment:
-      - KC_HTTP_RELATIVE_PATH=/auth
-      - KC_HOSTNAME=api-auth.tinnten.com
-      - KC_HOSTNAME_URL=https://api-auth.tinnten.com/auth
+      - KC_HTTP_RELATIVE_PATH=/
       - KC_PROXY_HEADERS=xforwarded
-      - KC_HOSTNAME_STRICT=false
     ports:
       - "8080:8080"  # Keycloak UI için
     networks:
