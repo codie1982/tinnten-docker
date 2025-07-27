@@ -72,21 +72,17 @@ services:  # Burada tüm servislerimizi tanımlarız
       - keycloak_data:/opt/keycloak/data
     command: >
       start
-      --optimized
       --http-enabled=true
       --http-port=8080
-      --hostname-strict=false
+      --proxy=edge
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_PROXY_HEADERS=xforwarded
       - KC_HTTP_RELATIVE_PATH=/auth
-      - KC_HOSTNAME_PATH=/auth
-      - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME_URL=http://keycloak:8080/auth
-      - QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY=true
-    ports:
-      - "3000:8080"
+      - KC_HOSTNAME=auth.tinnten.com
+      - KC_HOSTNAME_STRICT=true
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_PROXY=edge
     networks:
       - tinnten-net
     mem_limit: 2048m
