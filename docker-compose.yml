@@ -92,7 +92,25 @@ services:
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     networks:
       - tinnten-net
-
+  tinnten-cron:
+    build:
+      context: ./tinnten-cron
+    ports:
+      - "5003:5003"       # API portu
+    restart: always   # 👈 bu satırı ekle
+    depends_on:
+      - redis
+      - rabbitmq
+      - keycloak
+      - mongodb   # 👈 MongoDB'yi ekledik
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    networks:
+      - tinnten-net
   conversation-worker:
     build:
       context: ./tinnten-server
