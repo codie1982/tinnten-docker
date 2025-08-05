@@ -16,7 +16,6 @@ services:  # Burada tüm servislerimizi tanımlarız
     cpus: 0.25
     networks:
       - tinnten-net
-
   mongodb:
     image: mongo:6
     container_name: tinnten-mongodb
@@ -64,37 +63,6 @@ services:  # Burada tüm servislerimizi tanımlarız
       - RABBITMQ_DEFAULT_PASS=password
     networks:
       - tinnten-net
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:24.0.1
-    container_name: tinnten-keycloak-1
-    volumes:
-      - keycloak_data:/opt/keycloak/data
-    command: >
-      start
-      --optimized
-      --http-enabled=true
-      --http-port=8080
-      --hostname=api-auth.tinnten.com
-      --hostname-strict=true
-      --hostname-strict-backchannel=false
-      --hostname-strict-https=false
-      --proxy=edge
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_HOSTNAME=api-auth.tinnten.com
-      - KC_PROXY=edge
-      - KC_PROXY_HEADERS=xforwarded
-      - KC_HTTP_RELATIVE_PATH=/ # Default root path
-    ports:
-      - "8080:8080"  # UI erişimi (gerekirse Nginx'e yönlendirilir)
-    networks:
-      - tinnten-net
-    mem_limit: 2048m
-    cpus: 1.0
-    restart: unless-stopped
-
   tinnten-server:
     build:
       context: ./tinnten-server
@@ -112,6 +80,25 @@ services:  # Burada tüm servislerimizi tanımlarız
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
       - ELASTICSEARCH_BASE_URL=http://elasticsearch:9200
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    networks:
+      - tinnten-net
+  tinnten-cron:
+    build:
+      context: ./tinnten-cron
+    ports:
+      - "5003:5003"       # API portu
+    restart: always   # 👈 bu satırı ekle
+    depends_on:
+      - redis
+      - rabbitmq
+      - keycloak
+      - mongodb   # 👈 MongoDB'yi ekledik
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     networks:
       - tinnten-net
