@@ -72,7 +72,6 @@ services:  # Burada tüm servislerimizi tanımlarız
     depends_on:
       - redis
       - rabbitmq
-      - keycloak
       - mongodb   # 👈 MongoDB'yi ekledik
     environment:
       - NODE_ENV=production
@@ -92,7 +91,6 @@ services:  # Burada tüm servislerimizi tanımlarız
     depends_on:
       - redis
       - rabbitmq
-      - keycloak
       - mongodb   # 👈 MongoDB'yi ekledik
     environment:
       - NODE_ENV=production
@@ -102,8 +100,6 @@ services:  # Burada tüm servislerimizi tanımlarız
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     networks:
       - tinnten-net
-
-
   email-worker:
     build:
       context: ./tinnten-server
