@@ -93,25 +93,6 @@ services:
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
     networks:
       - tinnten-net
-  conversation-worker:
-    build:
-      context: ./tinnten-server
-    command: ["npm", "run", "conversationworker"]
-    environment:
-      - NODE_ENV=preProduction
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=password
-      - RABBITMQ_VHOST=/
-      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
-      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
-    depends_on:
-      - rabbitmq
-      - redis
-      - mongodb
-    networks:
-      - tinnten-net
 
   email-worker:
     build:
