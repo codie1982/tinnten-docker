@@ -59,7 +59,6 @@ services:
       - RABBITMQ_DEFAULT_PASS=password
     networks:
       - tinnten-net
-
   tinnten-server:
     build:
       context: ./tinnten-server
