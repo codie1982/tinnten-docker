@@ -17,15 +17,16 @@ services:
     image: mongo:6
     container_name: tinnten-mongodb
     restart: always
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
-      - "27017:27017"  # 🔓 Dış dünyaya açılır, sadece lokal geliştirmede uygundur
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo_data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: tinntenMongo123
-    mem_limit: 512m           # 💡 Dev için yeterli bellek limiti
-    cpus: 0.5                 # 💡 Aşırı CPU kullanmasını önler
+    mem_limit: 1g
+    cpus: 0.5
     networks:
       - tinnten-net
   elasticsearch:
