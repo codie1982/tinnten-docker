@@ -21,12 +21,13 @@ services:  # Burada tüm servislerimizi tanımlarız
     container_name: tinnten-mongodb
     restart: always
     ports:
-      - "127.0.0.1:27017:27017"  # 🔓 Dış dünyaya açılır, sadece lokal geliştirmede uygundur
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo_data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: tinntenMongo123
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     mem_limit: 4g
     cpus: 2.0
     networks:
