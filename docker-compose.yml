@@ -17,11 +17,12 @@ services:
     image: mongo:6
     container_name: tinnten-mongodb
     restart: always
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile"]
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile   # 👈 KEYFILE BURAYA EKLEDİ
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: tinntenMongo123
