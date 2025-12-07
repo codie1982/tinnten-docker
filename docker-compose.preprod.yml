@@ -66,18 +66,6 @@ services:
     networks:
       - tinnten-net
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:24.0.1
-    volumes:
-      - keycloak_data:/opt/keycloak/data
-    command: start --hostname api-auth.tinnten.com --proxy edge --hostname-strict=false
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-    ports:
-      - "3000:8080"
-    networks:
-      - tinnten-net
   tinnten-server:
     build:
       context: ../tinnten-server
@@ -138,48 +126,6 @@ services:
       - RABBITMQ_PASS=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
-    networks:
-      - tinnten-net
-
-  tinnten-scraper:
-    build:
-      context: ../tinnten-scraper
-    env_file:
-      - ../tinnten-scraper/.env
-    ports:
-      - "5004:5004"
-    restart: always
-    environment:
-      - SCRAPER_PORT=5004
-    mem_limit: 8g
-    cpus: 4.0
-    networks:
-      - tinnten-net
-
-  tinnten-embedding:
-    build:
-      context: ../tinnten-embedding
-    env_file:
-      - ../tinnten-embedding/.env
-    restart: always
-    ports:
-      - "5003:5003"
-    environment:
-      - NODE_ENV=production
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=password
-      - RABBITMQ_VHOST=/
-      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
-      - ELASTICSEARCH_NODE=http://elasticsearch:9200
-      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
-    mem_limit: 12g
-    cpus: 8.0
-    depends_on:
-      - rabbitmq
-      - mongodb
-      - elasticsearch
     networks:
       - tinnten-net
 
