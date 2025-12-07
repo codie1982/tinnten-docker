@@ -26,7 +26,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: tinntenMongo123
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/opt/mongo-keyfile"]
     mem_limit: 4g
     cpus: 2.0
     networks:
