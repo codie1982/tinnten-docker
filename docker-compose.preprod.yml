@@ -1,0 +1,314 @@
+services:
+  redis:
+    image: redis:6
+    restart: always
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=tinntenRedis123
+    mem_limit: 256m
+    cpus: 0.25
+    networks:
+      - tinnten-net
+
+  mongodb:
+    image: mongo:7.0
+    container_name: tinnten-mongodb
+    restart: always
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: tinntenMongo123
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    mem_limit: 4g
+    cpus: 2.0
+    networks:
+      - tinnten-net
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    mem_limit: 12g
+    cpus: 6.0
+    ports:
+      - "9200:9200"
+    networks:
+      - tinnten-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=password
+    networks:
+      - tinnten-net
+
+  tinnten-server:
+    build:
+      context: ../tinnten-server
+    env_file:
+      - ../tinnten-server/.env
+    ports:
+      - "5001:5001"
+    restart: always
+    depends_on:
+      - redis
+      - rabbitmq
+      - mongodb
+      - elasticsearch
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
+      - ELASTICSEARCH_BASE_URL=http://elasticsearch:9200
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - RABBITMQ_PROTOCOL=amqp
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    networks:
+      - tinnten-net
+
+  tinnten-cron:
+    build:
+      context: ../tinnten-cron
+    env_file:
+      - ../tinnten-cron/.env
+    ports:
+      - "5005:5005"
+    restart: always
+    depends_on:
+      - redis
+      - rabbitmq
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - PORT=5005
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - RABBITMQ_PROTOCOL=amqp
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    networks:
+      - tinnten-net
+
+  product-catalog:
+    build:
+      context: ../tinnten-product-catalog
+    env_file:
+      - ../tinnten-product-catalog/.env
+    ports:
+      - "5010:5010"
+    restart: always
+    depends_on:
+      - rabbitmq
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - CATALOG_PORT=5010
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - CATALOG_DB_NAME=tinnten-product-catalog
+      - RABBITMQ_PROTOCOL=amqp
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    networks:
+      - tinnten-net
+
+  product-catalog-worker:
+    build:
+      context: ../tinnten-product-catalog
+    env_file:
+      - ../tinnten-product-catalog/.env
+    command: ["python", "product_catalog_worker.py"]
+    restart: always
+    depends_on:
+      - rabbitmq
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - CATALOG_DB_NAME=tinnten-product-catalog
+      - RABBITMQ_PROTOCOL=amqp
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_USER=admin
+      - RABBITMQ_PASS=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    networks:
+      - tinnten-net
+
+  email-worker:
+    build:
+      context: ../tinnten-server
+    env_file:
+      - ../tinnten-server/.env
+    command: ["npm", "run", "emailworker"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 1g
+    cpus: 0.5
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - tinnten-net
+
+  agent-worker:
+    build:
+      context: ../tinnten-server
+    env_file:
+      - ../tinnten-server/.env
+    command: ["npm", "run", "agentworker"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 2g
+    cpus: 1.0
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - tinnten-net
+
+  db-worker:
+    build:
+      context: ../tinnten-server
+    env_file:
+      - ../tinnten-server/.env
+    command: ["npm", "run", "dbworker"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 4g
+    cpus: 2.0
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - tinnten-net
+
+  search-worker:
+    build:
+      context: ../tinnten-server
+    env_file:
+      - ../tinnten-server/.env
+    command: ["sh", "-c", "until curl -s http://elasticsearch:9200 >/dev/null; do sleep 3; done; npm run searchworker"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 2g
+    cpus: 1.0
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - elasticsearch
+    networks:
+      - tinnten-net
+
+  wallet-log-worker:
+    build:
+      context: ../tinnten-server
+    env_file:
+      - ../tinnten-server/.env
+    command: ["node", "src/workers/walletLogWorker.js"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    mem_limit: 1g
+    cpus: 0.5
+    depends_on:
+      - rabbitmq
+    networks:
+      - tinnten-net
+
+volumes:
+  keycloak_data:
+  redis_data:
+  mongo_data:
+  esdata:
+
+networks:
+  tinnten-net:
+    driver: bridge
