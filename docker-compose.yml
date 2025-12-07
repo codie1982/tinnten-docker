@@ -80,9 +80,9 @@ services:
       - tinnten-net
   tinnten-server:
     build:
-      context: ../tinnten-server
+      context: ./tinnten-server
     env_file:
-      - ../tinnten-server/.env
+      - ./tinnten-server/.env
     ports:
       - "5001:5001"
     restart: always
@@ -112,9 +112,9 @@ services:
 
   tinnten-cron:
     build:
-      context: ../tinnten-cron
+      context: ./tinnten-cron
     env_file:
-      - ../tinnten-cron/.env
+      - ./tinnten-cron/.env
     ports:
       - "5005:5005"
     restart: always
@@ -143,9 +143,9 @@ services:
 
   tinnten-scraper:
     build:
-      context: ../tinnten-scraper
+      context: ./tinnten-scraper
     env_file:
-      - ../tinnten-scraper/.env
+      - ./tinnten-scraper/.env
     ports:
       - "5004:5004"
     restart: always
@@ -158,9 +158,9 @@ services:
 
   tinnten-embedding:
     build:
-      context: ../tinnten-embedding
+      context: ./tinnten-embedding
     env_file:
-      - ../tinnten-embedding/.env
+      - ./tinnten-embedding/.env
     restart: always
     ports:
       - "5003:5003"
@@ -185,9 +185,9 @@ services:
 
   product-catalog:
     build:
-      context: ../tinnten-product-catalog
+      context: ./tinnten-product-catalog
     env_file:
-      - ../tinnten-product-catalog/.env
+      - ./tinnten-product-catalog/.env
     ports:
       - "5010:5010"
     restart: always
@@ -213,9 +213,9 @@ services:
 
   product-catalog-worker:
     build:
-      context: ../tinnten-product-catalog
+      context: ./tinnten-product-catalog
     env_file:
-      - ../tinnten-product-catalog/.env
+      - ./tinnten-product-catalog/.env
     command: ["python", "product_catalog_worker.py"]
     restart: always
     depends_on:
@@ -239,9 +239,9 @@ services:
 
   email-worker:
     build:
-      context: ../tinnten-server
+      context: ./tinnten-server
     env_file:
-      - ../tinnten-server/.env
+      - ./tinnten-server/.env
     command: ["npm", "run", "emailworker"]
     restart: always
     environment:
@@ -263,9 +263,9 @@ services:
 
   agent-worker:
     build:
-      context: ../tinnten-server
+      context: ./tinnten-server
     env_file:
-      - ../tinnten-server/.env
+      - ./tinnten-server/.env
     command: ["npm", "run", "agentworker"]
     restart: always
     environment:
@@ -287,9 +287,9 @@ services:
 
   db-worker:
     build:
-      context: ../tinnten-server
+      context: ./tinnten-server
     env_file:
-      - ../tinnten-server/.env
+      - ./tinnten-server/.env
     command: ["npm", "run", "dbworker"]
     restart: always
     environment:
@@ -311,9 +311,9 @@ services:
 
   search-worker:
     build:
-      context: ../tinnten-server
+      context: ./tinnten-server
     env_file:
-      - ../tinnten-server/.env
+      - ./tinnten-server/.env
     command: ["sh", "-c", "until curl -s http://elasticsearch:9200 >/dev/null; do sleep 3; done; npm run searchworker"]
     restart: always
     environment:
@@ -337,9 +337,9 @@ services:
 
   wallet-log-worker:
     build:
-      context: ../tinnten-server
+      context: ./tinnten-server
     env_file:
-      - ../tinnten-server/.env
+      - ./tinnten-server/.env
     command: ["node", "src/workers/walletLogWorker.js"]
     restart: always
     environment:
