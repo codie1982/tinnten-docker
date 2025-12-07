@@ -328,47 +328,12 @@ services:
     networks:
       - tinnten-net
 
-  crowdsec:
-    image: crowdsecurity/crowdsec:latest
-    restart: always
-    ports:
-      - "8086:8080"
-    environment:
-      - TZ=Europe/Istanbul
-    volumes:
-      - crowdsec-config:/etc/crowdsec
-      - crowdsec-data:/var/lib/crowdsec/data
-      - /var/log:/var/log:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - tinnten-net
-
-  crowdsec-firewall-bouncer:
-    image: crowdsecurity/cs-firewall-bouncer:latest
-    restart: always
-    privileged: true
-    network_mode: host
-    depends_on:
-      - crowdsec
-    environment:
-      - API_URL=http://127.0.0.1:8086
-      - API_KEY=${CROWDSEC_BOUNCER_KEY}
-    volumes:
-      - /var/lib/crowdsec/data:/var/lib/crowdsec/data:ro
-    command:
-      - /usr/local/bin/cs-firewall-bouncer
-      - -i
-      - nft
-
 volumes:
   keycloak_data:
   redis_data:
   mongo_data:
   esdata:
   portainer_data:
-  crowdsec-config:
-  crowdsec-data:
 
 networks:
   tinnten-net:
