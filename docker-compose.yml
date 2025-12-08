@@ -128,21 +128,6 @@ services:
     networks:
       - tinnten-net
 
-  tinnten-scraper:
-    build:
-      context: ./tinnten-scraper
-    env_file:
-      - ./tinnten-scraper/.env
-    ports:
-      - "5004:5004"
-    restart: always
-    environment:
-      - SCRAPER_PORT=5004
-    mem_limit: 8g
-    cpus: 4.0
-    networks:
-      - tinnten-net
-
   tinnten-embedding:
     build:
       context: ./tinnten-embedding
