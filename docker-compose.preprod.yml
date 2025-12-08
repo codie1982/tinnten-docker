@@ -329,7 +329,6 @@ services:
       - tinnten-net
 
 volumes:
-  keycloak_data:
   redis_data:
   mongo_data:
   esdata:
