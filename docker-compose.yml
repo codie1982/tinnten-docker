@@ -233,30 +233,6 @@ services:
     networks:
       - tinnten-net
 
-  agent-worker:
-    build:
-      context: ./tinnten-server
-    env_file:
-      - ./tinnten-server/.env
-    command: ["npm", "run", "agentworker"]
-    restart: always
-    environment:
-      - NODE_ENV=production
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=password
-      - RABBITMQ_VHOST=/
-      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
-      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
-    mem_limit: 2g
-    cpus: 1.0
-    depends_on:
-      - rabbitmq
-      - mongodb
-    networks:
-      - tinnten-net
-
   db-worker:
     build:
       context: ./tinnten-server
@@ -402,23 +378,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
-    networks:
-      - tinnten-net
-
-  falco:
-    image: falcosecurity/falco:0.37.1
-    restart: always
-    privileged: true
-    pid: host
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /dev:/host/dev
-      - /proc:/host/proc:ro
-      - /boot:/host/boot:ro
-      - /lib/modules:/host/lib/modules:ro
-      - /usr:/host/usr:ro
-    environment:
-      - FALCO_HOSTNAME=tinnten-prod
     networks:
       - tinnten-net
 
