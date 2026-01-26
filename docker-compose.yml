@@ -44,7 +44,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: PublicMongoPassword123!
-    command: ["mongod", "--bind_ip_all"]
+    command: ["mongod", "--replSet", "rsPublic", "--bind_ip_all"]
     networks:
       - tinnten-net
 
