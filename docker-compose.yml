@@ -33,6 +33,21 @@ services:
     networks:
       - tinnten-net
 
+  tinnten-mongodb-public:
+    image: mongo:7.0
+    container_name: tinnten-mongodb-public
+    restart: always
+    ports:
+      - "0.0.0.0:27018:27017"
+    volumes:
+      - mongo_public_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: PublicMongoPassword123!
+    command: ["mongod", "--bind_ip_all"]
+    networks:
+      - tinnten-net
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
     container_name: elasticsearch
@@ -411,6 +426,7 @@ services:
 volumes:
   redis_data:
   mongo_data:
+  mongo_public_data:
   esdata:
   prometheus_data:
   grafana_data:
