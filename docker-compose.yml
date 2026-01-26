@@ -41,6 +41,7 @@ services:
       - "0.0.0.0:27018:27017"
     volumes:
       - mongo_public_data:/data/db
+      - ./mongo-public-keyfile:/opt/mongo-public-keyfile:ro
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: PublicMongoPassword123!
