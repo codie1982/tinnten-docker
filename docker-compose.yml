@@ -252,6 +252,30 @@ services:
     networks:
       - tinnten-net
 
+  analytics-worker:
+    build:
+      context: ./tinnten-server
+    env_file:
+      - ./tinnten-server/.env
+    command: ["npm", "run", "analyticsworker"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 1g
+    cpus: 0.5
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - tinnten-net
+
   email-worker:
     build:
       context: ./tinnten-server
