@@ -8,7 +8,9 @@ services:
       - redis_data:/data
     # Keep Redis persistence under /data (volume-mounted) and avoid relying on an external redis.conf.
     # Use sh so we can reference the container env var for the password.
-    command: ["sh", "-c", "exec redis-server --dir /data --dbfilename redis_miner --requirepass \"$REDIS_PASSWORD\""]
+    # NOTE: docker-compose does variable interpolation on `$...` inside strings.
+    # Use `$$` to pass `$REDIS_PASSWORD` through to the container shell so it expands there.
+    command: ["sh", "-c", "exec redis-server --dir /data --dbfilename redis_miner --requirepass \"$$REDIS_PASSWORD\""]
     ports:
       - "6379:6379"
     environment:
