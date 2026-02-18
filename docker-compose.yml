@@ -178,23 +178,6 @@ services:
     networks:
       - tinnten-net
 
-  tinnten-scraper:
-    build:
-      context: ./tinnten-scraper
-    container_name: tinnten-scraper
-    env_file:
-      - ./tinnten-scraper/.env
-    ports:
-      - "5004:5004"
-    restart: always
-    environment:
-      - SCRAPER_PORT=5004
-      - AUTH_ENABLED=true
-    mem_limit: 2g
-    cpus: 2.0
-    networks:
-      - tinnten-net
-
   tinnten-embedding:
     build:
       context: ./tinnten-embedding
