@@ -117,6 +117,7 @@ services:
       - RABBITMQ_PASS=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - FETCHER_URL=http://tinnten-fetcher:5005
     networks:
       - tinnten-net
 
@@ -126,7 +127,7 @@ services:
     env_file:
       - ./tinnten-cron/.env
     ports:
-      - "5005:5005"
+      - "5007:5007"
     restart: always
     depends_on:
       - redis
@@ -134,7 +135,7 @@ services:
       - mongodb
     environment:
       - NODE_ENV=production
-      - PORT=5005
+      - PORT=5007
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
@@ -148,6 +149,49 @@ services:
       - RABBITMQ_PASS=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+    networks:
+      - tinnten-net
+
+  tinnten-fetcher:
+    build:
+      context: ./tinnten-fetcher
+    container_name: tinnten-fetcher
+    env_file:
+      - ./tinnten-fetcher/.env
+    ports:
+      - "5005:5005"
+    restart: always
+    depends_on:
+      - redis
+      - rabbitmq
+      - mongodb
+    environment:
+      - PORT=5005
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672/
+      - AUTH_ENABLED=true
+    mem_limit: 2g
+    cpus: 2.0
+    networks:
+      - tinnten-net
+
+  tinnten-scraper:
+    build:
+      context: ./tinnten-scraper
+    container_name: tinnten-scraper
+    env_file:
+      - ./tinnten-scraper/.env
+    ports:
+      - "5004:5004"
+    restart: always
+    environment:
+      - SCRAPER_PORT=5004
+      - AUTH_ENABLED=true
+    mem_limit: 2g
+    cpus: 2.0
     networks:
       - tinnten-net
 
