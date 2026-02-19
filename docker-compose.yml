@@ -170,7 +170,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
-      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten-fetcher?authSource=admin
       - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672/
       - AUTH_ENABLED=true
     mem_limit: 2g
