@@ -167,10 +167,11 @@ services:
       - mongodb
     environment:
       - PORT=5005
-      - REDIS_HOST=5.133.102.107
+      - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
-      - RABBITMQ_URL=amqp://admin:password@5.133.102.107:5672/
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672/
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten-fetcher?authSource=admin&directConnection=true
       - AUTH_ENABLED=true
     mem_limit: 2g
     cpus: 2.0
