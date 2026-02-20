@@ -135,10 +135,10 @@ services:
       - mongodb
     environment:
       - NODE_ENV=production
-      - PORT=5007
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
+      - ELASTICSEARCH_BASE_URL=http://elasticsearch:9200
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
       - RABBITMQ_PROTOCOL=amqp
       - RABBITMQ_HOST=rabbitmq
@@ -149,6 +149,7 @@ services:
       - RABBITMQ_PASS=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - FETCHER_URL=http://tinnten-fetcher:5005
     networks:
       - tinnten-net
 
@@ -168,7 +169,7 @@ services:
     environment:
       - PORT=5005
       - AUTH_ENABLED=true
-    mem_limit: 2g
+    mem_limit: 4g
     cpus: 2.0
     networks:
       - tinnten-net
