@@ -201,29 +201,6 @@ services:
     networks:
       - tinnten-net
 
-  ingest-worker:
-    build:
-      context: ./tinnten-embedding
-    command: python -m dotenv -f .env run -- PYTHONPATH=. python workers/ingest_worker.py
-    env_file:
-      - ./tinnten-embedding/.env
-    environment:
-      - PYTHONPATH=.
-      - RABBITMQ_PROTOCOL=amqp
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=admin
-      - RABBITMQ_PASSWORD=password
-      - RABBITMQ_VHOST=/
-      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
-      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
-    restart: unless-stopped
-    depends_on:
-      - rabbitmq
-      - mongodb
-    networks:
-      - tinnten-net
-
   product-catalog:
     build:
       context: ./tinnten-product-catalog
