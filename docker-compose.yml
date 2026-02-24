@@ -342,6 +342,10 @@ services:
       - RABBITMQ_PASSWORD=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
+      - REDIS_URL=redis://:tinntenRedis123@redis:6379
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
       - FETCHER_URL=http://tinnten-fetcher:5005
       - PRODUCTIZATION_FETCHER_CLAIM_ENABLED=true
