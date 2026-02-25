@@ -352,7 +352,7 @@ services:
       - PRODUCTIZATION_CRAWL_LIMIT=0
       - PRODUCTIZATION_FETCHER_CLAIM_PAGE_SIZE=50
       - PRODUCTIZATION_FETCHER_HTTP_TIMEOUT=180000
-    mem_limit: 2g
+    mem_limit: 6g
     cpus: 1.0
     depends_on:
       - rabbitmq
