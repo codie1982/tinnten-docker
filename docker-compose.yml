@@ -12,7 +12,7 @@ services:
     # Use `$$` to pass `$REDIS_PASSWORD` through to the container shell so it expands there.
     command: ["sh", "-c", "exec redis-server --dir /data --dbfilename redis_miner --requirepass \"$$REDIS_PASSWORD\""]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     environment:
       - REDIS_PASSWORD=tinntenRedis123
     mem_limit: 256m
@@ -41,7 +41,7 @@ services:
     container_name: tinnten-mongodb-public
     restart: always
     ports:
-      - "0.0.0.0:27018:27017"
+      - "127.0.0.1:27018:27017"
     volumes:
       - mongo_public_data:/data/db
       - ./mongo-public-keyfile:/opt/mongo-public-keyfile:ro
@@ -70,7 +70,7 @@ services:
     mem_limit: 12g
     cpus: 6.0
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     networks:
       - tinnten-net
 
@@ -78,8 +78,8 @@ services:
     image: rabbitmq:3-management
     restart: always
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
     environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=password
@@ -94,7 +94,7 @@ services:
     volumes:
     - ./tinnten-server/token:/app/token
     ports:
-      - "5001:5001"
+      - "127.0.0.1:5001:5001"
     restart: always
     depends_on:
       - redis
@@ -118,6 +118,9 @@ services:
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
       - FETCHER_URL=http://tinnten-fetcher:5005
+      - EMBEDDING_BASE_URL=http://tinnten-embedding:5003
+      - PRODUCT_CATALOG_SERVICE_URL=http://product-catalog:5010
+      - RABBIT_URL=amqp://admin:password@rabbitmq:5672/
     networks:
       - tinnten-net
 
@@ -127,7 +130,7 @@ services:
     env_file:
       - ./tinnten-cron/.env
     ports:
-      - "5007:5007"
+      - "127.0.0.1:5007:5007"
     restart: always
     depends_on:
       - redis
@@ -150,6 +153,9 @@ services:
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
       - FETCHER_URL=http://tinnten-fetcher:5005
+      - EMBEDDING_BASE_URL=http://tinnten-embedding:5003
+      - PRODUCT_CATALOG_SERVICE_URL=http://product-catalog:5010
+      - RABBIT_URL=amqp://admin:password@rabbitmq:5672/
     networks:
       - tinnten-net
 
@@ -160,7 +166,7 @@ services:
     env_file:
       - ./tinnten-fetcher/.env
     ports:
-      - "5005:5005"
+      - "127.0.0.1:5005:5005"
     restart: always
     depends_on:
       - redis
@@ -181,7 +187,7 @@ services:
       - ./tinnten-embedding/.env
     restart: always
     ports:
-      - "5003:5003"
+      - "127.0.0.1:5003:5003"
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -207,7 +213,7 @@ services:
     env_file:
       - ./tinnten-product-catalog/.env
     ports:
-      - "5010:5010"
+      - "127.0.0.1:5010:5010"
     restart: always
     depends_on:
       - rabbitmq
@@ -226,6 +232,8 @@ services:
       - RABBITMQ_PASS=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=tinntenRedis123
     networks:
       - tinnten-net
 
@@ -414,7 +422,7 @@ services:
     restart: always
     privileged: true
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -427,7 +435,7 @@ services:
     image: prom/node-exporter:v1.8.1
     restart: always
     ports:
-      - "9100:9100"
+      - "127.0.0.1:9100:9100"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -443,7 +451,7 @@ services:
     image: prom/prometheus:v2.54.1
     restart: always
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -461,7 +469,7 @@ services:
     image: grafana/grafana:11.1.0
     restart: always
     ports:
-      - "3030:3000"
+      - "127.0.0.1:3030:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=ChangeMe123!
@@ -477,8 +485,8 @@ services:
     image: portainer/portainer-ce:2.20.3
     restart: always
     ports:
-      - "9000:9000"
-      - "9443:9443"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9443:9443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
