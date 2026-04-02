@@ -92,7 +92,8 @@ services:
     env_file:
       - ./tinnten-server/.env
     volumes:
-    - ./tinnten-server/token:/app/token
+      - ./tinnten-server/token:/app/token
+      - conversation_storage:/app/storage/conversation
     ports:
       - "127.0.0.1:5001:5001"
     restart: always
@@ -481,6 +482,19 @@ services:
     networks:
       - tinnten-net
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: tinnten-ollama
+    restart: always
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    mem_limit: 8g
+    cpus: 8.0
+    networks:
+      - tinnten-net
+
   portainer:
     image: portainer/portainer-ce:2.20.3
     restart: always
@@ -501,6 +515,15 @@ volumes:
   prometheus_data:
   grafana_data:
   portainer_data:
+  ollama_data:
+  conversation_storage:
+    # Fixed host path for conversation attachment staging.
+    # Size is managed at the host filesystem level; reserve at least 50 GB on /srv.
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/tinnten/conversation-storage
 
 networks:
   tinnten-net:
