@@ -124,6 +124,7 @@ services:
       - RABBIT_URL=amqp://admin:password@rabbitmq:5672/
     networks:
       - tinnten-net
+      - tinnten-ai-net
 
   tinnten-cron:
     build:
@@ -369,6 +370,7 @@ services:
       - tinnten-fetcher
     networks:
       - tinnten-net
+      - tinnten-ai-net
 
   search-worker:
     build:
@@ -493,7 +495,7 @@ services:
     mem_limit: 8g
     cpus: 8.0
     networks:
-      - tinnten-net
+      - tinnten-ai-net
 
   portainer:
     image: portainer/portainer-ce:2.20.3
@@ -528,3 +530,6 @@ volumes:
 networks:
   tinnten-net:
     driver: bridge
+  tinnten-ai-net:
+    driver: bridge
+    internal: true
