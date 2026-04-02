@@ -74,6 +74,8 @@ services:
       context: ./tinnten-server
     env_file:
       - ./tinnten-server/.env
+    volumes:
+      - conversation_storage:/app/storage/conversation
     ports:
       - "5001:5001"
     restart: always
@@ -312,6 +314,14 @@ volumes:
   mongo_data:
   esdata:
   portainer_data:
+  conversation_storage:
+    # Fixed host path for conversation attachment staging.
+    # Size is managed at the host filesystem level; reserve at least 50 GB on /srv.
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/tinnten/conversation-storage
 
 networks:
   tinnten-net:
