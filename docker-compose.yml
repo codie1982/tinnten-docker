@@ -492,7 +492,9 @@ services:
       - "127.0.0.1:11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    mem_limit: 8g
+    environment:
+      - OLLAMA_NUM_PARALLEL=3
+    mem_limit: 14g
     cpus: 18.0
     networks:
       - tinnten-net
