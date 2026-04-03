@@ -497,7 +497,6 @@ services:
     mem_limit: 14g
     cpus: 18.0
     networks:
-      - tinnten-net
       - tinnten-ai-net
 
   portainer:
