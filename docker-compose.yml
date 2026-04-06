@@ -177,6 +177,8 @@ services:
     environment:
       - PORT=5005
       - AUTH_ENABLED=true
+    volumes:
+      - fetcher_raw_pages:/var/data/raw-pages
     mem_limit: 4g
     cpus: 2.0
     networks:
@@ -528,6 +530,13 @@ volumes:
       type: none
       o: bind
       device: /srv/tinnten/conversation-storage
+  fetcher_raw_pages:
+    # Fixed host path for fetcher disk-storage mode (raw scraped pages).
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/tinnten/fetcher-raw-pages
 
 networks:
   tinnten-net:
