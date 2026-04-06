@@ -1,4 +1,5 @@
 version: "3.9"
+name: tinnten
 
 services:
   redis:
@@ -86,6 +87,17 @@ services:
     networks:
       - tinnten-net
 
+  clamav:
+    image: clamav/clamav:1.4
+    container_name: tinnten-clamav
+    restart: always
+    volumes:
+      - clamav_data:/var/lib/clamav
+    mem_limit: 2g
+    cpus: 1.0
+    networks:
+      - tinnten-net
+
   tinnten-server:
     build:
       context: ./tinnten-server
@@ -104,6 +116,7 @@ services:
       - elasticsearch
     environment:
       - NODE_ENV=production
+      - DISABLE_AUTO_FILE_INTELLIGENCE_WORKER=true
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
@@ -422,6 +435,36 @@ services:
     networks:
       - tinnten-net
 
+  file-intelligence-worker:
+    build:
+      context: ./tinnten-server
+    env_file:
+      - ./tinnten-server/.env
+    command: ["node", "src/workers/fileIntelligenceWorker.js"]
+    restart: always
+    volumes:
+      - conversation_storage:/app/storage/conversation
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - CLAMD_HOST=clamav
+      - CLAMD_PORT=3310
+      - CLAMAV_ENABLED=true
+    mem_limit: 2g
+    cpus: 1.0
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - clamav
+    networks:
+      - tinnten-net
+
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.50.0
     restart: always
@@ -499,6 +542,7 @@ services:
     mem_limit: 14g
     cpus: 18.0
     networks:
+      - tinnten-net
       - tinnten-ai-net
 
   portainer:
@@ -522,6 +566,7 @@ volumes:
   grafana_data:
   portainer_data:
   ollama_data:
+  clamav_data:
   conversation_storage:
     # Fixed host path for conversation attachment staging.
     # Size is managed at the host filesystem level; reserve at least 50 GB on /srv.
