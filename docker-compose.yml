@@ -1,10 +1,17 @@
 version: "3.9"
 name: tinnten
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
+
 services:
   redis:
     image: redis:6
     restart: always
+    logging: *default-logging
     volumes:
       - redis_data:/data
     # Keep Redis persistence under /data (volume-mounted) and avoid relying on an external redis.conf.
@@ -25,6 +32,7 @@ services:
     image: mongo:7.0
     container_name: tinnten-mongodb
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
@@ -41,6 +49,7 @@ services:
     image: mongo:7.0
     container_name: tinnten-mongodb-public
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:27018:27017"
     volumes:
@@ -78,6 +87,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:5672:5672"
       - "127.0.0.1:15672:15672"
@@ -91,6 +101,7 @@ services:
     image: clamav/clamav:1.4
     container_name: tinnten-clamav
     restart: always
+    logging: *default-logging
     volumes:
       - clamav_data:/var/lib/clamav
     mem_limit: 2g
@@ -109,6 +120,7 @@ services:
     ports:
       - "127.0.0.1:5001:5001"
     restart: always
+    logging: *default-logging
     depends_on:
       - redis
       - rabbitmq
@@ -147,6 +159,7 @@ services:
     ports:
       - "127.0.0.1:5007:5007"
     restart: always
+    logging: *default-logging
     depends_on:
       - redis
       - rabbitmq
@@ -183,6 +196,7 @@ services:
     ports:
       - "127.0.0.1:5005:5005"
     restart: always
+    logging: *default-logging
     depends_on:
       - redis
       - rabbitmq
@@ -203,6 +217,7 @@ services:
     env_file:
       - ./tinnten-embedding/.env
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:5003:5003"
     environment:
@@ -232,6 +247,7 @@ services:
     ports:
       - "127.0.0.1:5010:5010"
     restart: always
+    logging: *default-logging
     depends_on:
       - rabbitmq
       - mongodb
@@ -261,6 +277,7 @@ services:
       - ./tinnten-product-catalog/.env
     command: ["python", "product_catalog_worker.py"]
     restart: always
+    logging: *default-logging
     depends_on:
       - rabbitmq
       - mongodb
@@ -287,6 +304,7 @@ services:
       - ./tinnten-server/.env
     command: ["npm", "run", "analyticsworker"]
     restart: always
+    logging: *default-logging
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -311,6 +329,7 @@ services:
       - ./tinnten-server/.env
     command: ["npm", "run", "emailworker"]
     restart: always
+    logging: *default-logging
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -335,6 +354,7 @@ services:
       - ./tinnten-server/.env
     command: ["npm", "run", "dbworker"]
     restart: always
+    logging: *default-logging
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -359,6 +379,7 @@ services:
       - ./tinnten-server/.env
     command: ["npm", "run", "productizationworker"]
     restart: always
+    logging: *default-logging
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -394,6 +415,7 @@ services:
       - ./tinnten-server/.env
     command: ["sh", "-c", "until curl -s http://elasticsearch:9200 >/dev/null; do sleep 3; done; npm run searchworker"]
     restart: always
+    logging: *default-logging
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -420,6 +442,7 @@ services:
       - ./tinnten-server/.env
     command: ["node", "src/workers/walletLogWorker.js"]
     restart: always
+    logging: *default-logging
     environment:
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
@@ -442,6 +465,7 @@ services:
       - ./tinnten-server/.env
     command: ["node", "src/workers/fileIntelligenceWorker.js"]
     restart: always
+    logging: *default-logging
     volumes:
       - conversation_storage:/app/storage/conversation
     environment:
@@ -468,6 +492,7 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.50.0
     restart: always
+    logging: *default-logging
     privileged: true
     ports:
       - "127.0.0.1:8080:8080"
@@ -482,6 +507,7 @@ services:
   node-exporter:
     image: prom/node-exporter:v1.8.1
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:9100:9100"
     volumes:
@@ -498,6 +524,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.54.1
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:9090:9090"
     volumes:
@@ -516,6 +543,7 @@ services:
   grafana:
     image: grafana/grafana:11.1.0
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:3030:3000"
     environment:
@@ -533,6 +561,7 @@ services:
     image: ollama/ollama:latest
     container_name: tinnten-ollama
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:11434:11434"
     volumes:
@@ -548,6 +577,7 @@ services:
   portainer:
     image: portainer/portainer-ce:2.20.3
     restart: always
+    logging: *default-logging
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9443:9443"
