@@ -489,6 +489,31 @@ services:
     networks:
       - tinnten-net
 
+  subscription-worker:
+    build:
+      context: ./tinnten-server
+    env_file:
+      - ./tinnten-server/.env
+    command: ["npm", "run", "subscriptionworker"]
+    restart: always
+    logging: *default-logging
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 512m
+    cpus: 0.5
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - tinnten-net
+
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.50.0
     restart: always
