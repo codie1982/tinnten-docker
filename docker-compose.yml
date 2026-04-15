@@ -117,6 +117,7 @@ services:
     volumes:
       - ./tinnten-server/token:/app/token
       - conversation_storage:/app/storage/conversation
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "127.0.0.1:5001:5001"
     restart: always
@@ -147,6 +148,8 @@ services:
       - EMBEDDING_BASE_URL=http://tinnten-embedding:5003
       - PRODUCT_CATALOG_SERVICE_URL=http://product-catalog:5010
       - RABBIT_URL=amqp://admin:password@rabbitmq:5672/
+      # Workflow Engine — AES-256 şifreleme anahtarı (64 hex char = 32 byte). .env üzerinden set edin.
+      # WORKFLOW_ENCRYPTION_KEY=<64-hex-char-key>
     networks:
       - tinnten-net
       - tinnten-ai-net
