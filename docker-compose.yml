@@ -158,7 +158,7 @@ services:
     env_file:
       - ./tinnten-cron/.env
     ports:
-      - "127.0.0.1:5007:5007"
+      - "127.0.0.1:5007:5005"
     restart: always
     logging: *default-logging
     depends_on:
@@ -172,6 +172,7 @@ services:
       - REDIS_PASSWORD=tinntenRedis123
       - ELASTICSEARCH_BASE_URL=http://elasticsearch:9200
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - DB_TINNTEN=tinnten-cron
       - RABBITMQ_PROTOCOL=amqp
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
