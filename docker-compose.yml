@@ -186,6 +186,7 @@ services:
       - EMBEDDING_BASE_URL=http://tinnten-embedding:5003
       - PRODUCT_CATALOG_SERVICE_URL=http://product-catalog:5010
       - RABBIT_URL=amqp://admin:password@rabbitmq:5672/
+      - CRON_WEBHOOK_SECRET=tinnten-cron-secret-2026
     networks:
       - tinnten-net
 
