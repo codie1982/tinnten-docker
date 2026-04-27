@@ -1,4 +1,3 @@
-name: tinnten
 
 x-logging: &default-logging
   driver: "json-file"
@@ -615,27 +614,6 @@ services:
     networks:
       - tinnten-net
 
-  tinnten-cms:
-    build:
-      context: ./tinnten-cms
-    container_name: tinnten-cms
-    ports:
-      - "0.0.0.0:5020:5020"
-    environment:
-      - NODE_ENV=production
-      - NEXTAUTH_URL=http://localhost:5020
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - MONGODB_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=tinntenRedis123
-    networks:
-      - tinnten-net
-    depends_on:
-      - mongodb
-      - redis
-    restart: always
-    logging: *default-logging
 
 volumes:
   redis_data:
