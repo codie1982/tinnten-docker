@@ -411,6 +411,51 @@ services:
       - tinnten-net
       - tinnten-ai-net
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # User Product Categorization Worker
+  #
+  # Wizard / panel'den eklenen kullanıcı ürün ve hizmetleri için Ollama
+  # üzerinden 4-seviyeli kategori tahmini yapar, mevcut DB'de findOrCreate
+  # ile aiCategories alanını doldurur.
+  #
+  # ÖNEMLI: tinnten-productization-worker'la KARIŞTIRMA — o kazıma
+  # ürünleri (scrap pipeline) için. Bu ayrı bir akış, kullanıcı tarafı.
+  #
+  # Plan kaynağı: ~/.claude/plans/wizard-company-categorization/INDEX.md
+  # ─────────────────────────────────────────────────────────────────────────
+  user-product-categorization-worker:
+    build:
+      context: ./tinnten-server
+    env_file:
+      - ./tinnten-server/.env
+    command: ["npm", "run", "userproductcategorizationworker"]
+    restart: always
+    logging: *default-logging
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      # Ollama config — qwen2.5:7b prod'da yüklü
+      - OLLAMA_URL=http://tinnten-ollama:11434
+      - OLLAMA_MODEL=qwen2.5:7b
+      - OLLAMA_DISABLED=false
+      # Worker tuning
+      - USER_PRODUCT_CATEGORIZATION_PREFETCH=1
+    mem_limit: 1g
+    cpus: 0.5
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - ollama
+    networks:
+      - tinnten-net
+      - tinnten-ai-net
+
   search-worker:
     build:
       context: ./tinnten-server
