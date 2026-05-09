@@ -537,6 +537,7 @@ services:
     networks:
       - tinnten-net
 
+
   subscription-worker:
     build:
       context: ./tinnten-server
