@@ -233,6 +233,11 @@ services:
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
       - ELASTICSEARCH_NODE=http://elasticsearch:9200
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    volumes:
+      # FAISS index files live under /app/data; without a named volume every
+      # image rebuild wipes the vectors while chunk metadata stays in Mongo
+      # (causes "indexed but search returns 0" — see embedding_architecture.md).
+      - embedding_data:/app/data
     mem_limit: 12g
     cpus: 8.0
     depends_on:
@@ -698,6 +703,10 @@ volumes:
   portainer_data:
   ollama_data:
   clamav_data:
+  embedding_data:
+    # FAISS index persistence for tinnten-embedding. Stores /app/data/faiss/
+    # (faiss.index + sidecars). Mongo holds chunk metadata; this volume holds
+    # the actual vectors. Both must survive across image rebuilds.
   conversation_storage:
     # Fixed host path for conversation attachment staging.
     # Size is managed at the host filesystem level; reserve at least 50 GB on /srv.
