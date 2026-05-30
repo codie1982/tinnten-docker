@@ -655,6 +655,12 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=ChangeMe123!
       - GF_USERS_DEFAULT_THEME=light
+      # CMS içine iframe ile gömme için gerekli (Sistem İzleme > Grafana sekmesi)
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      # CMS, Grafana'yı kimlik-korumalı reverse proxy arkasından gösterir; gerekirse:
+      # - GF_SECURITY_COOKIE_SAMESITE=none
+      # - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      # - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - grafana_data:/var/lib/grafana
     depends_on:
