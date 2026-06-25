@@ -356,6 +356,35 @@ services:
     networks:
       - tinnten-net
 
+  # Toplu mail kampanya worker'ı — ayrı campaign_email_queue'yu tüketir
+  # (büyük blast transactional email-worker'ı bloklamasın). prefetch(1) +
+  # kampanya sendConfig.ratePerSec ile throttle eder. SES itibar ayarları
+  # (SES_CONFIGURATION_SET, SES_CAMPAIGN_MAX_RATE) .env'den gelir.
+  campaign-email-worker:
+    build:
+      context: ./tinnten-server
+    env_file:
+      - ./tinnten-server/.env
+    command: ["npm", "run", "campaignworker"]
+    restart: always
+    logging: *default-logging
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 1g
+    cpus: 0.5
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - tinnten-net
+
   db-worker:
     build:
       context: ./tinnten-server
