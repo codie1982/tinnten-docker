@@ -128,6 +128,7 @@ services:
     environment:
       - NODE_ENV=production
       - DISABLE_AUTO_FILE_INTELLIGENCE_WORKER=true
+      - DISABLE_AUTO_ERROR_WORKER=true
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
@@ -377,6 +378,43 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+    networks:
+      - tinnten-net
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Error Worker (in-house hata izleme — eski Sentry yerine)
+  #
+  # error_queue'yu tüketir → error_events + error_issues (Mongo). Token'lı
+  # hatalarda kullanıcıyı Keycloak'tan çözer (.env admin creds) ve Redis'te
+  # cache'ler. tinnten-server DISABLE_AUTO_ERROR_WORKER=true ile auto-spawn
+  # kapalı; bu container tek tüketici (file-intelligence-worker ile aynı desen).
+  # ─────────────────────────────────────────────────────────────────────────
+  error-worker:
+    build:
+      context: ./tinnten-server
+    env_file:
+      - ./tinnten-server/.env
+    command: ["npm", "run", "errorworker"]
+    restart: always
+    logging: *default-logging
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=tinntenRedis123
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+    mem_limit: 1g
+    cpus: 0.5
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - redis
     networks:
       - tinnten-net
 
