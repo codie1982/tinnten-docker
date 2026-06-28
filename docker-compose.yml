@@ -146,6 +146,8 @@ services:
       - FETCHER_URL=http://tinnten-fetcher:5005
       - EMBEDDING_BASE_URL=http://tinnten-embedding:5003
       - PRODUCT_CATALOG_SERVICE_URL=http://product-catalog:5010
+      - CRON_SERVICE_URL=http://tinnten-cron:5005
+      - CRON_URL=http://tinnten-cron:5005
       - RABBIT_URL=amqp://admin:password@rabbitmq:5672/
       # Workflow Engine — AES-256 şifreleme anahtarı (64 hex char = 32 byte). .env üzerinden set edin.
       # WORKFLOW_ENCRYPTION_KEY=<64-hex-char-key>

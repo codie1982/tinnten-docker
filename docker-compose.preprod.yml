@@ -100,6 +100,8 @@ services:
       - RABBITMQ_PASS=password
       - RABBITMQ_VHOST=/
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - CRON_SERVICE_URL=http://tinnten-cron:5005
+      - CRON_URL=http://tinnten-cron:5005
     networks:
       - tinnten-net
 
