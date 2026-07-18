@@ -236,6 +236,49 @@ services:
       - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
       - ELASTICSEARCH_NODE=http://elasticsearch:9200
       - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      # --- RAG v2 retrieval (tinnten-embedding/docs/RAG_V2_ROADMAP.md) ---
+      # Bu blok BUGUN DAVRANIS DEGISTIRMEZ. Amaci, daha once HICBIR deploy
+      # artefaktinda gorunmeyen retrieval anahtarlarini acikca ortaya koymak;
+      # rollout/rollback tek satir olsun.
+      #
+      # Kod varsayilanlariyla karsilastirma (runtime'da dogrulandi):
+      #   HYBRID_SEARCH_ENABLED / HYBRID_OVERFETCH / RRF_K_CONSTANT /
+      #   RERANKER_MODEL / CHUNK_STRATEGY / INGEST_LEASE_SECONDS -> AYNI.
+      #   RERANK_TOP_N -> kod varsayilani 30, burada 20. Reranker KAPALI oldugu
+      #   surece ATIL (etkisi yok); RERANKER_MODEL doldurulunca devreye girer.
+      #   20 = Faz 4'un CPU-bilincli baslangic degeri, p95 olcumune gore ayarla.
+      #
+      # Hybrid = dense FAISS + lexical Mongo $text, RRF ile birlestirilir.
+      # ON KOSUL: `chunk_text_search` index'i GERCEKTEN var olmali. Index
+      # olusturma hatasi kodda sessizce yutuluyor ve $text hata vermeden BOS
+      # donuyor -> hybrid "acik" gorunur ama tek bacakla calisir, fark edilmez.
+      # Acmadan once:  python3 scripts/rag_preflight.py --company-id <ID>
+      # Kademeli acilis icin firma-bazli canary (server override) tercih edilir;
+      # bu global anahtar TUM firmalari birden etkiler.
+      - HYBRID_SEARCH_ENABLED=false
+      - HYBRID_OVERFETCH=4
+      - RRF_K_CONSTANT=60
+      # Reranker: BOS = kapali. Doldurmadan once Faz 4'u oku:
+      #  * model ~2GB; Dockerfile onu build'de INDIRMIYOR -> ilk sorguda
+      #    runtime'da iner. HF cache `embedding_data` volume'unda DEGIL (orasi
+      #    yalniz FAISS) -> her image rebuild'de ~2GB yeniden iner.
+      #  * prod CPU-only (torch+cpu) -> p95 latency OLCULMEDEN acma.
+      #  * yuklenemezse servis healthy kalir ve arama SESSIZCE rerank'siz doner;
+      #    gorunurluk: GET /api/v10/config -> reranker_loaded/reranker_load_error
+      - RERANKER_MODEL=
+      - RERANK_TOP_N=20
+      # Chunking: char | structure | auto. `auto` (Faz 7/KN3) icerige gore secer:
+      # markdown basligi VARSA structure, YOKSA char (schema-derived basliksiz
+      # metinde structure faydasiz). Degistirmek REINDEX ister.
+      - CHUNK_STRATEGY=char
+      # Faithful schema reindex (Faz 6): fetcher DB-read yolunda schema-derived
+      # metni markdown'dan once kullan (crawl_results.extracted.extracted_content).
+      # Varsayilan KAPALI; reindex surucusu bilincli acar. MIN_CHARS fetcher
+      # Config.INDEX_SCHEMA_MIN_CHARS (=200) ile AYNI olmali.
+      - INDEX_SCHEMA_CONTENT_ENABLED=false
+      - INDEX_SCHEMA_MIN_CHARS=200
+      # Ingest kilidi lease suresi (sn) — worker olurse kilit devralinabilsin.
+      - INGEST_LEASE_SECONDS=900
     volumes:
       # FAISS index files live under /app/data; without a named volume every
       # image rebuild wipes the vectors while chunk metadata stays in Mongo
