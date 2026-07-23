@@ -212,7 +212,7 @@ services:
       - AUTH_ENABLED=true
     volumes:
       - fetcher_raw_pages:/var/data/raw-pages
-    mem_limit: 4g
+    mem_limit: 8g
     cpus: 2.0
     networks:
       - tinnten-net
