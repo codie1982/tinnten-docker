@@ -279,6 +279,7 @@ services:
       - INDEX_SCHEMA_MIN_CHARS=200
       # Ingest kilidi lease suresi (sn) — worker olurse kilit devralinabilsin.
       - INGEST_LEASE_SECONDS=900
+      - MAX_PAGES_ENFORCEMENT_ENABLED=1
     volumes:
       # FAISS index files live under /app/data; without a named volume every
       # image rebuild wipes the vectors while chunk metadata stays in Mongo
