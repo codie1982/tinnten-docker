@@ -433,6 +433,10 @@ services:
   # (büyük blast transactional email-worker'ı bloklamasın). prefetch(1) +
   # kampanya sendConfig.ratePerSec ile throttle eder. SES itibar ayarları
   # (SES_CONFIGURATION_SET, SES_CAMPAIGN_MAX_RATE) .env'den gelir.
+  # ⚠️ TEK REPLİKA KALMALI: dedupe garantisi tek consumer'ın seri işlemesine
+  # dayanır — maillog {campaignId,to} claim'i "queued" satırında yeniden
+  # göndermeye izin verir; 2+ replika aynı alıcıya çift mail atabilir. Ayrıca
+  # ratePerSec throttle'ı süreç-içi sleep'tir: N replika = N × SES hızı.
   campaign-email-worker:
     build:
       context: ./tinnten-server
