@@ -170,6 +170,13 @@ services:
       - mongodb
     environment:
       - NODE_ENV=production
+      # tinnten-cron/.env `PORT=5007` diyor ve env_file ile konteynere giriyordu;
+      # oysa yayınlanan port, Dockerfile EXPOSE ve tinnten-server'ın dial ettiği
+      # adres (CRON_SERVICE_URL=http://tinnten-cron:5005) 5005. Konteyner 5007'de
+      # dinlediği için cron job oluşturma/güncelleme çağrıları ECONNREFUSED
+      # alıyordu → cron listeleri hiç zamanlanmıyordu. `environment:` env_file'ı
+      # ezer; docker-compose.preprod.yml'de bu satır zaten var.
+      - PORT=5005
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=tinntenRedis123
