@@ -240,7 +240,7 @@ services:
 
   # Builder UI ve servera özel OAuth/JWT korumalı hosted MCP gateway.
   # Yalnız loopback'e açılır;
-  # production HTTPS reverse proxy 127.0.0.1:8094'e yönlendirilmelidir.
+  # production HTTPS reverse proxy 127.0.0.1:8095'e yönlendirilmelidir.
   tinnten-mcp-web:
     build:
       context: ./tinnten-mpc-server
@@ -251,7 +251,7 @@ services:
     restart: always
     logging: *default-logging
     ports:
-      - "127.0.0.1:8094:80"
+      - "127.0.0.1:8095:80"
     depends_on:
       tinnten-mpc-control-api:
         condition: service_healthy
