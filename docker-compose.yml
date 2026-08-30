@@ -158,6 +158,7 @@ services:
       tinnten-mcp-registry:
         aliases:
           - tinnten-server-mcp-registry
+      sites-net:
 
   # Tinnten hosted MCP control plane. Builder kimliği Keycloak'tan, server
   # firma üyeliği ve mcp:server.access:read kararı tinnten-server'dan alınır.
@@ -326,6 +327,21 @@ services:
       - rabbitmq
       - mongodb
     environment:
+      # Sema held-out dogrulama esigi: 0.8 -> 0.6 (24 Tem 2026).
+      # HOLDOUT=3 iken 0.8 => passed/3 >= 0.8 => UCUNUN DE gecmesi gerekiyordu;
+      # tek liste/paywall/404 sayfasi tum semayi dusuruyordu (failed_validation).
+      # 0.6 => 2/3 yeterli. Kalite guvencesi korunur: sema yine >=300 karakter
+      # + %50 proza uretmek zorunda, yanlis sema runtime'da fit_markdown'a duser.
+      - EXTRACTION_VALIDATE_PASS_RATIO=0.6
+      # Index kuyrugu backpressure esigi: 160000 -> 20000 (25 Tem 2026).
+      # Varsayilan 160000, content_indexing_queue'nun tam o derinlikte ASILI
+      # kalmasina yol aciyordu: ingest ne kadar bosaltsa fetcher hemen ayni
+      # kadar yeni sayfa-index tetikliyordu, birikim hic erimiyordu. Esik
+      # dusurulunce fetcher kuyruk 20000'in altina inene kadar YENI tetikleme
+      # yapmaz ve birikim erir. Kayipsiz: backpressure aktifken watermark da
+      # yazilmaz, sayfa sonraki crawl dongusunde yeniden denenir
+      # (bkz. result_processor.py `_embed_queue_over_limit`).
+      - EMBED_QUEUE_BACKPRESSURE_DEPTH=20000
       - PORT=5005
       - AUTH_ENABLED=true
     volumes:
@@ -398,6 +414,10 @@ services:
       # Ingest kilidi lease suresi (sn) — worker olurse kilit devralinabilsin.
       - INGEST_LEASE_SECONDS=900
       - MAX_PAGES_ENFORCEMENT_ENABLED=1
+      # Per-company FAISS production migration settings.
+      - PER_COMPANY_FAISS_ENABLED=true
+      - FILTERED_SEARCH_MIN_CANDIDATES=200
+      - FILTERED_SEARCH_MAX_CANDIDATES=200
     volumes:
       # FAISS index files live under /app/data; without a named volume every
       # image rebuild wipes the vectors while chunk metadata stays in Mongo
@@ -409,6 +429,71 @@ services:
       - rabbitmq
       - mongodb
       - elasticsearch
+    networks:
+      - tinnten-net
+
+  # ── Faz 0 (embedding-search-saturation): ingest consumer HTTP'den AYRILDI ──
+  # AYNI imaj, komut worker.py. FAISS volume'u tinnten-embedding ile PAYLASIR
+  # (yazma fcntl _write_lock ile cross-process guvenli, _save_index atomik,
+  # okuyan reload_if_updated/mtime ile tazelenir). environment blogu
+  # tinnten-embedding ile AYNI tutulmali (ozellikle MONGO_URI, RABBITMQ_*,
+  # CHUNK_STRATEGY, INDEX_SCHEMA_*, INGEST_LEASE_SECONDS).
+  tinnten-embedding-ingest:
+    build:
+      context: ./tinnten-embedding
+    command: ["python", "worker.py"]
+    # Replika sayisi BURADA sabit (25 Tem 2026). Onceden yalnizca
+    # `--scale tinnten-embedding-ingest=2` ile ayaga kaldiriliyordu; bu yuzden
+    # --scale'siz calistirilan herhangi bir `docker compose up -d` olcegi
+    # sessizce 1'e indirip ikinci worker'i SILIYORDU (canlida yasandi: throughput
+    # yariya dustu, container `docker ps -a`'da bile gorunmedigi icin fark
+    # edilmesi zor). Burada tanimliyken compose her seferinde 2'ye yakinsar.
+    deploy:
+      replicas: 2
+    env_file:
+      - ./tinnten-embedding/.env
+    restart: always
+    logging: *default-logging
+    environment:
+      # Toplu ingest (25 Tem 2026): content-index mesajlari firma bazinda
+      # gruplanip TEK FAISS yazimiyla islenir (dokuman basina 2 tam index
+      # yazimi -> grup basina 1). Kodda varsayilan zaten true; burada acikca
+      # sabitlendi ki davranis gorunur olsun ve gerekirse false'a cekip
+      # yeniden baslatmak yetsin (rebuild gerekmez).
+      - INGEST_BATCH_ENABLED=true
+      - NODE_ENV=production
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=password
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_AUTH_MECHANISM=PLAIN,AMQPLAIN,EXTERNAL
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+      - MONGO_URI=mongodb://root:tinntenMongo123@mongodb:27017/tinnten?authSource=admin
+      - HYBRID_SEARCH_ENABLED=false
+      - HYBRID_OVERFETCH=4
+      - RRF_K_CONSTANT=60
+      - RERANKER_MODEL=
+      - RERANK_TOP_N=20
+      - CHUNK_STRATEGY=char
+      - INDEX_SCHEMA_CONTENT_ENABLED=false
+      - INDEX_SCHEMA_MIN_CHARS=200
+      - INGEST_LEASE_SECONDS=900
+      # ── Faz 1 (embedding-search-saturation): per-company FAISS AÇIK ──
+      # Migration 24 Tem 2026 --apply: 28 firma / 233.040 vektör kopyalandı
+      # (rollback: bu 3 satırı sil + iki embedding servisini birlikte restart;
+      # global faiss.index DOKUNULMADI, yedek /root/backups/faiss.index.bak-faz1-*).
+      # Izolasyon yapisal oldugu icin 5000'lik over-fetch 200'e indirildi.
+      - PER_COMPANY_FAISS_ENABLED=true
+      - FILTERED_SEARCH_MIN_CANDIDATES=200
+      - FILTERED_SEARCH_MAX_CANDIDATES=200
+    volumes:
+      - embedding_data:/app/data
+    mem_limit: 8g
+    cpus: 6.0
+    depends_on:
+      - rabbitmq
+      - mongodb
     networks:
       - tinnten-net
 
@@ -945,14 +1030,15 @@ services:
       - "127.0.0.1:3030:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=ChangeMe123!
+      - GF_SECURITY_ADMIN_PASSWORD=ZFrUhpmZYQAMbvdW4NF3gY15xMMA
       - GF_USERS_DEFAULT_THEME=light
       # CMS içine iframe ile gömme için gerekli (Sistem İzleme > Grafana sekmesi)
       - GF_SECURITY_ALLOW_EMBEDDING=true
-      # CMS, Grafana'yı kimlik-korumalı reverse proxy arkasından gösterir; gerekirse:
-      # - GF_SECURITY_COOKIE_SAMESITE=none
-      # - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
-      # - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      # CMS (Vercel) iframe'i çapraz-site olduğundan oturum çerezi için gerekli:
+      - GF_SECURITY_COOKIE_SAMESITE=none
+      # Sub-path modu: nginx api.tinnten.com/grafana/ -> bu container (port 3000)
+      - GF_SERVER_ROOT_URL=https://api.tinnten.com/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - grafana_data:/var/lib/grafana
     depends_on:
@@ -1023,6 +1109,11 @@ volumes:
 
 networks:
   tinnten-net:
+    driver: bridge
+  # Kiraci site container'lari. Bilincli olarak `internal` DEGIL:
+  # izolasyon, Mongo/Redis/ES'in bu agda OLMAMASINDAN gelir.
+  sites-net:
+    name: sites-net
     driver: bridge
   tinnten-ai-net:
     driver: bridge
