@@ -193,6 +193,7 @@ services:
       retries: 12
     mem_limit: 1g
     cpus: 1.0
+    pids_limit: 128
     networks:
       tinnten-net:
       tinnten-mcp-internal:
@@ -231,6 +232,7 @@ services:
       retries: 12
     mem_limit: 1g
     cpus: 1.0
+    pids_limit: 256
     networks:
       tinnten-mcp-internal:
         aliases:
@@ -264,6 +266,7 @@ services:
       retries: 12
     mem_limit: 256m
     cpus: 0.25
+    pids_limit: 128
     networks:
       - tinnten-mcp-internal
       - tinnten-mcp-gateway
