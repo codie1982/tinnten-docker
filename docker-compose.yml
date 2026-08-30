@@ -266,6 +266,7 @@ services:
     cpus: 0.25
     networks:
       - tinnten-mcp-internal
+      - tinnten-mcp-gateway
 
   tinnten-cron:
     build:
@@ -1118,6 +1119,8 @@ networks:
   tinnten-ai-net:
     driver: bridge
     internal: true
+  tinnten-mcp-gateway:
+    driver: bridge
   tinnten-mcp-internal:
     driver: bridge
     internal: true
