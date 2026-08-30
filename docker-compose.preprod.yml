@@ -16,7 +16,10 @@ services:
     mem_limit: 256m
     cpus: 0.25
     networks:
-      - tinnten-net
+      tinnten-net:
+      tinnten-mcp-registry:
+        aliases:
+          - tinnten-server-mcp-registry
 
   mongodb:
     image: mongo:7.0
@@ -34,6 +37,7 @@ services:
     cpus: 2.0
     networks:
       - tinnten-net
+      - tinnten-mcp-internal
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
@@ -104,6 +108,102 @@ services:
       - CRON_URL=http://tinnten-cron:5005
     networks:
       - tinnten-net
+
+  tinnten-mpc-control-api:
+    build:
+      context: ./tinnten-mpc-server
+      dockerfile: deploy/Dockerfile
+      target: app
+    env_file:
+      - ./tinnten-mpc-server/.env
+    command: ["node", "apps/control-api/dist/main.js"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3910
+      - MONGO_URL=mongodb://root:tinntenMongo123@mongodb:27017/tinnten-mcp?authSource=admin
+      - MONGO_DB=tinnten-mcp
+      - MCP_ENVIRONMENT=staging
+      - MCP_DEPLOYMENT_MODE=hosted
+      - TINNTEN_AUTHORIZATION_URL=http://tinnten-server:5001/api/v10/mcp-servers/runtime/{serverId}/access
+      - TINNTEN_MCP_SERVERS_URL=http://tinnten-server:5001/api/v10/mcp-servers
+      - AUTH_COOKIE_SECURE=true
+    depends_on:
+      - mongodb
+      - tinnten-server
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3910/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    mem_limit: 1g
+    cpus: 1.0
+    networks:
+      tinnten-net:
+      tinnten-mcp-internal:
+        aliases:
+          - control-api
+
+  tinnten-mpc-runtime:
+    build:
+      context: ./tinnten-mpc-server
+      dockerfile: deploy/Dockerfile
+      target: app
+    env_file:
+      - ./tinnten-mpc-server/.env
+    command: ["node", "apps/mcp-runtime/dist/main.js"]
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3900
+      - MONGO_URL=mongodb://root:tinntenMongo123@mongodb:27017/tinnten-mcp?authSource=admin
+      - MONGO_DB=tinnten-mcp
+      - MCP_ENVIRONMENT=staging
+      - MCP_DEPLOYMENT_MODE=hosted
+      - MCP_AUTH_MODE=jwt
+      - TINNTEN_MCP_REGISTRY_URL=http://tinnten-server-mcp-registry:5001/api/v10/internal/mcp-servers/resolve
+    depends_on:
+      - mongodb
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3900/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    mem_limit: 1g
+    cpus: 1.0
+    networks:
+      tinnten-mcp-internal:
+        aliases:
+          - mcp-runtime
+      tinnten-mcp-egress:
+      tinnten-mcp-registry:
+
+  tinnten-mcp-web:
+    build:
+      context: ./tinnten-mpc-server
+      dockerfile: deploy/Dockerfile
+      target: web-hosted
+    env_file:
+      - ./tinnten-mpc-server/.env
+    restart: always
+    ports:
+      - "127.0.0.1:8094:80"
+    depends_on:
+      tinnten-mpc-control-api:
+        condition: service_healthy
+      tinnten-mpc-runtime:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    mem_limit: 256m
+    cpus: 0.25
+    networks:
+      - tinnten-mcp-internal
 
   tinnten-cron:
     build:
@@ -378,3 +478,11 @@ volumes:
 networks:
   tinnten-net:
     driver: bridge
+  tinnten-mcp-internal:
+    driver: bridge
+    internal: true
+  tinnten-mcp-egress:
+    driver: bridge
+  tinnten-mcp-registry:
+    driver: bridge
+    internal: true

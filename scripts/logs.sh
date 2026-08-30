@@ -14,7 +14,8 @@
 #
 # Kisa takma adlar: server/api, cron, fetcher, embedding, search, file, company,
 #   email, analytics, wallet, subscription, categorization, productization,
-#   catalog, catalog-worker, mongo, mongo-public, redis, rabbit, es, clamav
+#   catalog, catalog-worker, mcp, mcp-api, mcp-runtime, mongo, mongo-public,
+#   redis, rabbit, es, clamav
 # (Bilinmeyen ad dogrudan compose servis adi olarak gecirilir.)
 #
 # Compose dosyasini degistir: COMPOSE_FILE env (varsayilan: docker-compose.yml)
@@ -50,6 +51,9 @@ alias_to_service() {
     clamav)                   echo "clamav" ;;
     catalog)                  echo "product-catalog" ;;
     catalog-worker)           echo "product-catalog-worker" ;;
+    mcp|mcp-web)              echo "tinnten-mcp-web" ;;
+    mcp-api)                  echo "tinnten-mpc-control-api" ;;
+    mcp-runtime)              echo "tinnten-mpc-runtime" ;;
     analytics)                echo "analytics-worker" ;;
     email)                    echo "email-worker" ;;
     db-worker|dbworker)       echo "db-worker" ;;
