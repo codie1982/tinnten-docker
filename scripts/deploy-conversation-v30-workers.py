@@ -36,7 +36,7 @@ def deploy(root, check=False):
             raise SystemExit(f"Unexpected API inheritance in {name}; deployment stopped.")
         if any(mount.get("target") != "/app/storage/conversation" for mount in service.get("volumes", [])):
             raise SystemExit(f"Unexpected worker mount in {name}; deployment stopped.")
-        if any(network.get("aliases") for network in service.get("networks", {}).values()):
+        if any((network or {}).get("aliases") for network in service.get("networks", {}).values()):
             raise SystemExit(f"Unexpected worker DNS alias in {name}; deployment stopped.")
     print("V30 worker configuration validated; no API ports/socket/token mounts inherited.")
     if check:
