@@ -1,17 +1,14 @@
 # Opt-in production overlay. Start only these two services; never run a blanket up.
-# Requires Docker Compose >= 2.24.4 for !reset/!override.
+# Deploy with scripts/deploy-conversation-v30-workers.py to inherit only
+# connection settings from the API, never its ports, mounts or DNS aliases.
 x-conversation-v30-worker: &conversation-v30-worker
-  extends:
-    file: ${V30_BASE_COMPOSE_FILE:-docker-compose.yml}
-    service: tinnten-server
   image: ${V30_WORKER_IMAGE:-tinnten-tinnten-server:latest}
-  build: !reset null
-  ports: !reset []
-  depends_on: !reset []
+  env_file:
+    - ./tinnten-server/.env
   # Do not inherit the API's Docker socket, token directory or DNS aliases.
-  volumes: !override
+  volumes:
     - conversation_storage:/app/storage/conversation
-  networks: !override
+  networks:
     - tinnten-net
     - tinnten-ai-net
     - tinnten-mcp-registry

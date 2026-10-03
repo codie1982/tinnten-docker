@@ -6,7 +6,9 @@ commands below. Run Docker commands on the server, never on the local UI machine
 
 ## Required environment
 
-The workers inherit `tinnten-server` environment and `./tinnten-server/.env`.
+The workers read `./tinnten-server/.env`. The deployment helper forwards only
+the API's effective infrastructure connection overrides, in memory, without
+printing credentials or creating another secret file.
 Configure the following in `/root/tinnten/tinnten-server/.env`:
 
 ```dotenv
@@ -27,22 +29,29 @@ Build the API image before installing workers. By default they use
 tag shared with the API. Do not rebuild the whole server source as part of this
 worker-only installation.
 
-## Install / update (Compose >= 2.24.4)
+## Install / update
 
 ```sh
 cd /root/tinnten
-docker compose -f docker-compose.yml -f docker-compose.conversation-v30.yml config --quiet
-docker compose -f docker-compose.yml -f docker-compose.conversation-v30.yml run --rm --no-deps conversation-v30-turn-worker node src/scripts/ensureConversationRuntimeV30Indexes.js
-docker compose -f docker-compose.yml -f docker-compose.conversation-v30.yml up -d --no-deps --no-build conversation-v30-turn-worker conversation-v30-outbox-worker
+python3 scripts/deploy-conversation-v30-workers.py --check
+python3 scripts/deploy-conversation-v30-workers.py
 docker compose -f docker-compose.yml -f docker-compose.conversation-v30.yml ps conversation-v30-turn-worker conversation-v30-outbox-worker
 docker compose -f docker-compose.yml -f docker-compose.conversation-v30.yml logs --tail=50 conversation-v30-turn-worker conversation-v30-outbox-worker
 ```
 
 Do not use `--remove-orphans` or a blanket `up`, `down`, or `restart`.
-The overlay clears API ports, dependency startup, socket/token mounts and API
-DNS aliases. It keeps only conversation storage and existing required networks.
+The overlay does not extend the API service: Compose extends may retain ports
+even when reset tags are used. The helper validates resolved ports, mounts,
+dependencies and DNS aliases before starting anything. It keeps only
+conversation storage and existing required networks.
 Each worker has independent memory/CPU and bounded logs. The turn worker is one
 sequential consumer; do not scale it without verifying lease/concurrency fences.
+
+Verify V30 unique indexes before first acceptance. The existing backend index
+script can encounter legacy `expiresAt_1` non-TTL/TTL conflicts on conversation
+and action nonce collections. Do not drop indexes or enable TTL automatically:
+changing conversation TTL can delete production data. Audit the conflict
+separately; retained unique scope/projection/reset indexes are required.
 
 ## Verification
 
