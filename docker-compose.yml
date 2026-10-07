@@ -44,23 +44,6 @@ services:
       - tinnten-net
       - tinnten-mcp-internal
 
-  tinnten-mongodb-public:
-    image: mongo:7.0
-    container_name: tinnten-mongodb-public
-    restart: always
-    logging: *default-logging
-    ports:
-      - "127.0.0.1:27018:27017"
-    volumes:
-      - mongo_public_data:/data/db
-      - ./mongo-public-keyfile:/opt/mongo-public-keyfile:ro
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: PublicMongoPassword123!
-    command: ["mongod", "--replSet", "rsPublic", "--bind_ip_all", "--keyFile", "/opt/mongo-public-keyfile"]
-    networks:
-      - tinnten-net
-
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
     container_name: elasticsearch
@@ -127,6 +110,7 @@ services:
       - mongodb
       - elasticsearch
     environment:
+      - DISABLE_AUTO_CAMPAIGN_WORKER=true
       - NODE_ENV=production
       - DISABLE_AUTO_FILE_INTELLIGENCE_WORKER=true
       - DISABLE_AUTO_ERROR_WORKER=true
@@ -683,6 +667,7 @@ services:
     restart: always
     logging: *default-logging
     environment:
+      - SES_CONFIGURATION_SET=tinnten-campaigns
       - NODE_ENV=production
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
@@ -1040,6 +1025,7 @@ services:
       - GF_SECURITY_ALLOW_EMBEDDING=true
       # CMS (Vercel) iframe'i çapraz-site olduğundan oturum çerezi için gerekli:
       - GF_SECURITY_COOKIE_SAMESITE=none
+      - GF_SECURITY_COOKIE_SECURE=true
       # Sub-path modu: nginx api.tinnten.com/grafana/ -> bu container (port 3000)
       - GF_SERVER_ROOT_URL=https://api.tinnten.com/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
@@ -1049,6 +1035,55 @@ services:
       - prometheus
     networks:
       - tinnten-net
+
+  # n8n Community Edition workflow automation. The application port is bound
+  # to loopback only and is published through the host Nginx reverse proxy.
+  n8n-postgres:
+    image: postgres:16-alpine
+    restart: always
+    logging: *default-logging
+    env_file:
+      - ./n8n-postgres.env
+    volumes:
+      - n8n_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    networks:
+      - n8n-net
+
+  n8n:
+    image: n8nio/n8n:2.40.5
+    restart: always
+    init: true
+    stop_grace_period: 30s
+    logging: *default-logging
+    env_file:
+      - ./n8n.env
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      n8n-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:5678/healthz').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 256
+    networks:
+      - n8n-net
 
   ollama:
     image: ollama/ollama:latest
@@ -1088,6 +1123,8 @@ volumes:
   esdata:
   prometheus_data:
   grafana_data:
+  n8n_data:
+  n8n_postgres_data:
   portainer_data:
   ollama_data:
   clamav_data:
@@ -1113,6 +1150,8 @@ volumes:
 
 networks:
   tinnten-net:
+    driver: bridge
+  n8n-net:
     driver: bridge
   # Kiraci site container'lari. Bilincli olarak `internal` DEGIL:
   # izolasyon, Mongo/Redis/ES'in bu agda OLMAMASINDAN gelir.
