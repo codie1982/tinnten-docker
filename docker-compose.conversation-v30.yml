@@ -1,0 +1,49 @@
+# Opt-in production overlay. Start only these two services; never run a blanket up.
+# Deploy with scripts/deploy-conversation-v30-workers.py to inherit only
+# connection settings from the API, never its ports, mounts or DNS aliases.
+x-conversation-v30-worker: &conversation-v30-worker
+  image: ${V30_WORKER_IMAGE:-tinnten-tinnten-server:latest}
+  env_file:
+    - ./tinnten-server/.env
+  # Do not inherit the API's Docker socket, token directory or DNS aliases.
+  volumes:
+    - conversation_storage:/app/storage/conversation
+  networks:
+    - tinnten-net
+    - tinnten-ai-net
+    - tinnten-mcp-registry
+  restart: unless-stopped
+  stop_grace_period: 60s
+  init: true
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "3"
+  labels:
+    tinnten.runtime-version: "30"
+
+services:
+  conversation-v30-turn-worker:
+    <<: *conversation-v30-worker
+    command:
+      - sh
+      - -ec
+      - |
+        test -n "$$V30_SURFACE_ASSERTION_SECRET" || { echo 'Missing V30_SURFACE_ASSERTION_SECRET' >&2; exit 1; }
+        test -n "$$V30_ACTION_TOKEN_SECRET" || { echo 'Missing V30_ACTION_TOKEN_SECRET' >&2; exit 1; }
+        exec node src/workers/conversationV30TurnWorker.js
+    mem_limit: 1g
+    cpus: 1.0
+
+  conversation-v30-outbox-worker:
+    <<: *conversation-v30-worker
+    command:
+      - sh
+      - -ec
+      - |
+        test -n "$$V30_SURFACE_ASSERTION_SECRET" || { echo 'Missing V30_SURFACE_ASSERTION_SECRET' >&2; exit 1; }
+        test -n "$$V30_ACTION_TOKEN_SECRET" || { echo 'Missing V30_ACTION_TOKEN_SECRET' >&2; exit 1; }
+        exec node src/workers/conversationV30OutboxWorker.js
+    mem_limit: 512m
+    cpus: 0.5
