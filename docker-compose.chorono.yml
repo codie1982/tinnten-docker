@@ -1,0 +1,38 @@
+name: chorono
+
+services:
+  chorono-server:
+    build:
+      context: ${CHORONO_SOURCE_DIR:-./chorono-server}
+    env_file:
+      - ${CHORONO_ENV_FILE:-./chorono-server/.env}
+    environment:
+      NODE_ENV: production
+      PORT: "6001"
+    ports:
+      - "127.0.0.1:6001:6001"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:6001/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      start_period: 45s
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - tinnten-infrastructure
+
+networks:
+  tinnten-infrastructure:
+    external: true
+    name: ${CHORONO_INFRA_NETWORK:-tinnten_tinnten-net}
